@@ -15,6 +15,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'yarn' # Buildi sürətləndirmək üçün keşləmə
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -23,16 +24,26 @@ jobs:
           java-version: '11'
 
       - name: Install Dependencies
-        run: yarn install
+        run: yarn install --frozen-lockfile # Daha stabil install üçün
+
+      - name: Debug - List Files
+        run: ls -R # Harda olduğumuzu və android qovluğunu görmək üçün
 
       - name: Build APK
         run: |
-          cd android
-          chmod +x ./gradlew
-          ./gradlew assembleDebug
+          # Əgər android qovluğu birbaşa ana qovluqdadırsa bu işləyəcək.
+          # Əgər yoxdursa, 'ls' nəticəsinə baxıb yolu bura yazmalısan.
+          if [ -d "android" ]; then
+            cd android
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          else
+            echo "XƏTA: android qovluğu tapılmadı! Zəhmət olmasa proyekt strukturunu yoxla."
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: SA-MP
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: SAMP-Launcher-APK
+          path: "**/build/outputs/apk/debug/*.apk" # Daha geniş axtarış yolu
